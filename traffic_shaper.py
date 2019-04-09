@@ -8,6 +8,9 @@ from subprocess import Popen, PIPE
 import signal
 import numpy as np
 
+# wondershaper path
+WONDERSHAPER = "/cm/shared/package/utils/bin/wondershaper"
+
 # bandwidth distributions for the old gigabit configuration
 BW_DISTRIBUTION = {
     'A': [60.344, 149.999, 263.793, 384.482, 653.448],
@@ -18,8 +21,8 @@ BW_DISTRIBUTION = {
     'F': [268.965, 729.310, 777.586, 820.689, 925.862],
     'G': [334.482, 529.310, 537.931, 600.000, 624.137],
     'H': [136.206, 425.862, 525.862, 660.344, 998.275],
-    '1gbps': [1000.0, 1000.0, 1000.0, 1000.0, 1000.0],
-    '10gbps': [10000.0, 10000.0, 10000.0, 10000.0, 10000.0]
+    '1gbps': [1050.0, 1050.0, 1050.0, 1050.0, 1050.0],
+    '10gbps': [10500.0, 10500.0, 10500.0, 10500.0, 10500.0]
 }
 # the interval at which bandwidth changes for the A-H Ballani usecases, measured in seconds
 VARIABILITY_INTERVAL = 5
@@ -35,18 +38,13 @@ BUDGET = 10000
 # replenishing rate, measured in Gbit per second
 REPL_RATE = 0.99
 
-# enforce the traffic as in Google
-def emulate_google():
-    #enforce bandwidth of MAX_BW and do nothing else
-    time.sleep(1)
-
 def get_GBit_sent(t1, t2):
     return 8 * (t2 - t1) / (1000 * 1000 * 1000.0)
 
 def limit_bw(bw_limit):
     # call wondershaper: first to reset, then to enforce
-    Popen("sudo /cm/shared/package/utils/bin/wondershaper -c -a ib0", shell=True).communicate() 
-    command = "sudo /cm/shared/package/utils/bin/wondershaper -u {} -d {} -a ib0".format(int(bw_limit * 1000), int(MAX_BW * 1000))
+    Popen("sudo " + WONDERSHAPER + " -c -a ib0", shell=True).communicate() 
+    command = "sudo {} -u {} -d {} -a ib0".format(WONDERSHAPER, int(bw_limit * 1000), int(MAX_BW * 1000))
     Popen(command, shell=True).communicate()
     print("bw has been limited to {} Mbps".format(bw_limit))    
     
@@ -149,20 +147,18 @@ def emulate_gbit(scenario):
 # intercept the signal and stop the bw limitation
 def handler(sign, frame):
     print("going to shutdown, stopping the bw limitation first...")
-    Popen("sudo /cm/shared/package/utils/bin/wondershaper -c -a ib0", shell=True).communicate()
+    Popen("sudo " + WONDERSHAPER + " -c -a ib0", shell=True).communicate()
     exit(0) 
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("Usage: traffic_shaper.py [aws, google]")
+        print("Usage: traffic_shaper.py [aws | gbit] [initial budget | A-H setup]")
     else:
         # add handler for signal
         signal.signal(signal.SIGUSR1, handler)
         # limit the initial bandwidth
         limit_bw(MAX_BW)
         if sys.argv[1] == "aws":
-            emulate_aws(int(sys.argv[2]))
-        elif sys.argv[1] == "google":
-            emulate_google() 
+            emulate_aws(int(sys.argv[2])) 
         elif sys.argv[1] == "gbit":
             emulate_gbit(sys.argv[2])
