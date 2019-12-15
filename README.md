@@ -1,3 +1,12 @@
+# Bandwidth Emulator
+
+This repository is a software artifact for the following article:
+
+# Alexandru Uta, Alexandru Custura, Dmitry Duplyakin, Ivo Jimenez, Jan Rellermeyer, Carlos Maltzahn, Robert Ricci, Alexandru Iosup. Is Big Data Performance Reproducible in Modern Cloud Networks?. In proceedings of 17th USENIX Symposium on Networked Systems Design and Implementation (NSDI), 2020, February 25-27, Santa Clara, USA.
+
+=================================================================
+
+
 This is a bandwidth emulation script that is able to enforce specific network bandwidth behavior in the server it is running on. The goal is to enable the user to run experiments that emulate real-world cloud network behavior in local/private clusters. This gives the user the possibility to study the interaction between real-world applications and cloud network performance variability.
 
 Types of emulation:
